@@ -1,0 +1,39 @@
+---
+title: "testing"
+author: "Lijing Chen"
+date: "3/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(jsonlite)
+library(lubridate)
+library(httr)
+```
+
+```{r}
+readRenviron(".Renviron")
+```
+
+```{r}
+r <- GET(
+  "https://api.edamam.com/api/food-database/v2/parser",
+  query = list(
+    app_id = Sys.getenv("ID"),
+    app_key = Sys.getenv("KEY"),
+    ingr = "ice cream",
+    category = "packaged-foods"
+  )
+)
+stop_for_status(r)
+json <- content(r, as = "text")
+names(fromJSON(json))
+a <-fromJSON(json)$hints
+a$food %>% select(brand,nutrients) %>% flatten()
+a %>% select(food) %>% flatten() %>% select(c(food.brand,food.category))
+```
