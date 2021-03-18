@@ -21,19 +21,46 @@ readRenviron(".Renviron")
 ```
 
 ```{r}
+a <- "hamburger"
+
 r <- GET(
   "https://api.edamam.com/api/food-database/v2/parser",
   query = list(
     app_id = Sys.getenv("ID"),
     app_key = Sys.getenv("KEY"),
-    ingr = "ice cream",
-    category = "packaged-foods"
+    ingr = a,
+    category = "generic-foods"
   )
 )
 stop_for_status(r)
 json <- content(r, as = "text")
 names(fromJSON(json))
-a <-fromJSON(json)$hints
-a$food %>% select(brand,nutrients) %>% flatten()
-a %>% select(food) %>% flatten() %>% select(c(food.brand,food.category))
+br <- "Del Taco"
+a <-fromJSON(json)$hints$food%>% flatten()
+tbl <- a %>% select(servingSizes) %>% flatten()
+head(tbl$brand,10)
+tbl
+a$servingSizes[[1]] %>% select(label,quantity)
 ```
+
+```{r}
+tbl<- a %>% select(label,image,nutrients.ENERC_KCAL,nutrients.PROCNT,nutrients.FAT,nutrients.CHOCDF,nutrients.FIBTG) %>% flatten()
+df <- tibble(lable = tbl$label,Calories = tbl$nutrients.ENERC_KCAL,
+              Protein = tbl$nutrients.PROCNT,Fat = tbl$nutrients.FAT,
+              Carbonhydrate = tbl$nutrients.CHOCDF,
+              Fiber = tbl$nutrients.FIBTG)
+df %>% filter(lable== "Hamburger")
+```
+
+
+```{r}
+tbl<-a %>% 
+  select(label,brand,servingSizes,nutrients.ENERC_KCAL,nutrients.PROCNT,
+         nutrients.FAT,nutrients.CHOCDF,nutrients.FIBTG) %>% flatten()
+df <- tibble(lable = tbl$label,brand = tbl$brand, Calories = tbl$nutrients.ENERC_KCAL,
+              Protein = tbl$nutrients.PROCNT,Fat = tbl$nutrients.FAT,
+              Carbonhydrate = tbl$nutrients.CHOCDF,
+              Fiber = tbl$nutrients.FIBTG)
+df %>% filter(brand== br)
+```
+
